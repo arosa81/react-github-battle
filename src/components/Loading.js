@@ -9,23 +9,29 @@ const styles = {
 };
 
 class Loading extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      text: props.text,
-    };
-  }
+  state = {
+    text: this.props.text
+  };
+
+  static propTypes = {
+    text: PropTypes.string.isRequired,
+    speed: PropTypes.number.isRequired,
+  };
+
+  static defaultProps = {
+    text: 'Loading',
+    speed: 300,
+  };
 
   componentDidMount() {
-    const stopper = `${this.props.text}...`;
+    const { text, speed } = this.props;
+    const stopper = `${text}...`;
 
     this.interval = window.setInterval(() => {
-      if (this.state.text === stopper) {
-        this.setState(() => ({ text: this.props.text }));
-      } else {
-        this.setState(prevState => ({ text: `${prevState.text}.` }));
-      }
-    }, this.props.speed);
+      this.state.text === stopper
+        ? this.setState(() => ({ text: this.props.text }))
+        : this.setState(prevState => ({ text: `${prevState.text}.` }))
+    }, speed);
   }
 
   componentWillUnmount() {
@@ -41,15 +47,5 @@ class Loading extends Component {
     );
   }
 }
-
-Loading.propTypes = {
-  text: PropTypes.string.isRequired,
-  speed: PropTypes.number.isRequired,
-};
-
-Loading.defaultProps = {
-  text: 'Loading',
-  speed: 300,
-};
 
 export default Loading;

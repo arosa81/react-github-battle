@@ -6,9 +6,7 @@ import api from '../utils/api';
 import PlayerPreview from './PlayerPreview';
 import Loading from './Loading';
 
-function Profile(props) {
-  const { info } = props;
-
+function Profile({ info }) {
   return (
     <PlayerPreview
       avatar={info.avatar_url}
@@ -31,12 +29,12 @@ Profile.propTypes = {
   info: PropTypes.object.isRequired,
 };
 
-function Player(props) {
+function Player({ label, score, profile }) {
   return (
     <div>
-      <h1 className="header">{props.label}</h1>
-      <h3 style={{ textAlign: 'center' }}>Score: {props.score}</h3>
-      <Profile info={props.profile} />
+      <h1 className="header">{label}</h1>
+      <h3 style={{ textAlign: 'center' }}>Score: {score}</h3>
+      <Profile info={profile} />
     </div>
   );
 }
@@ -47,37 +45,40 @@ Player.propTypes = {
   profile: PropTypes.object.isRequired,
 };
 
-class Results extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      winner: null,
-      loser: null,
-      error: null,
-      loading: true,
-    };
-  }
+class Results extends Component {  
+  state = {
+    winner: null,
+    loser: null,
+    error: null,
+    loading: true,
+  };
 
-  componentDidMount() {
+  static propTypes = {
+    location: PropTypes.object.isRequired,
+  };
+
+  async componentDidMount() {
     const { location } = this.props;
-    const players = queryString.parse(location.search);
+    const { playerOneName, playerTwoName } = queryString.parse(location.search);
 
-    api.battle([players.playerOneName, players.playerTwoName])
-      .then(function (results) {
-        if (results === null) {
-          return this.setState(() => ({
-            error: 'Looks like there was an error. Check that both users exist on Github',
-            loading: false,
-          }));
-        }
-        return this.setState(() => ({
-          error: null,
-          winner: results[0],
-          loser: results[1],
+    try {
+      const players = await api.battle([playerOneName, playerTwoName])
+      
+      if (players === null) {
+        this.setState(() => ({
+          error: 'Looks like there was an error. Check that both users exist on Github',
           loading: false,
         }));
-      }.bind(this))
-      .catch(error => console.log(error));
+      }
+      this.setState(() => ({
+        error: null,
+        winner: players[0],
+        loser: players[1],
+        loading: false,
+      }));
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   render() {
@@ -110,9 +111,5 @@ class Results extends Component {
     );
   }
 }
-
-Results.propTypes = {
-  location: PropTypes.object.isRequired,
-};
 
 export default Results;
