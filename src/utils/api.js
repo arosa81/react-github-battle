@@ -1,9 +1,7 @@
-import axios from 'axios';
-
 const getProfile = async username => {
   try {
-    const user = await axios.get(`https://api.github.com/users/${username}`);
-    return user.data;
+    const user = await fetch(`https://api.github.com/users/${username}`);
+    return user.json();
   } catch (error) {
     console.log(error);
   }
@@ -11,8 +9,8 @@ const getProfile = async username => {
 
 const getRepos = async username => {
   try {
-    const repo = await axios.get(`https://api.github.com/users/${username}/repos`);
-    return repo.data;
+    const repo = await fetch(`https://api.github.com/users/${username}/repos`);
+    return repo.json();
   } catch (error) {
     console.log(error);
   }
@@ -29,7 +27,7 @@ const calculateScore = ({ followers }, repos) => (
 
 const getUserData = async player => {
   try {
-    const [profile, repos] = await axios.all([
+    const [profile, repos] = await Promise.all([
       getProfile(player),
       getRepos(player)])
     
@@ -46,7 +44,7 @@ const sortPlayers = players => (
 export default {
   battle: async players => {
     try {
-      return sortPlayers(await axios.all(players.map(getUserData)));
+      return sortPlayers(await Promise.all(players.map(getUserData)));
     } catch (error) {
       console.log(error);
     }
@@ -54,8 +52,9 @@ export default {
   fetchPopularRepos: async language => {
     const encodedURI = window.encodeURI(`https://api.github.com/search/repositories?q=starts:>1+language:${language}&sort=stars&order=desc&type=Repositories`);
     try {
-      const response = await axios.get(encodedURI)
-      return response.data.items;
+      const response = await fetch(encodedURI)
+      const repos = await response.json();
+      return repos.items;
     } catch (error) {
       console.log(error);
     }
